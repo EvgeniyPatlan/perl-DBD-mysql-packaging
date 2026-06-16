@@ -84,7 +84,7 @@ switch_to_vault_repo() {
 
 add_percona_yum_repo(){
     yum -y install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
-    percona-release enable ps-84-lts testing
+    percona-release enable ps-84-lts experimental
     percona-release enable tools testing
     return
 }
@@ -273,12 +273,13 @@ install_deps() {
         add_percona_apt_repo
         apt-get update
         export DEBIAN_VERSION="$(sed -n 's/^VERSION_CODENAME=\(.*\)/\1/p' /etc/os-release)"
-        if [ "x${DEBIAN_VERSION}" = "xnoble" -o "x${DEBIAN_VERSION}" = "xtrixie" ]; then
+        if [ "x${DEBIAN_VERSION}" = "xnoble" -o "x${DEBIAN_VERSION}" = "xtrixie" -o "x${DEBIAN_VERSION}" = "xresolute" ]; then
             wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
             dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+            apt-get -y install libcrypt-dev
         fi
         DEBIAN_FRONTEND=noninteractive apt-get -y install devscripts equivs libdevel-checklib-perl libssl-dev libtest-deep-perl libtest-deep-type-perl
-        DEBIAN_FRONTEND=noninteractive apt-get -y install percona-server-server libperconaserverclient22-dev
+        DEBIAN_FRONTEND=noninteractive apt-get -y install percona-server-server libperconaserverclient24-dev
         CURPLACE=$(pwd)
         cd $WORKDIR
         link=$(echo "${PACKAGING_REPO}" | sed -re 's|github.com|raw.githubusercontent.com|; s|.git$||')/"${PRBRANCH}"/debian/control
@@ -494,7 +495,7 @@ build_deb(){
     if [ "x${DEBIAN_VERSION}" = "xxenial" ]; then
         sed -i 's/libssl1.1/libssl1.0.0/' debian/control
     fi
-    if [ x"${DEBIAN_VERSION}" = xjammy -o x"${DEBIAN_VERSION}" = xbookworm -o x"${DEBIAN_VERSION}" = xnoble -o x"${DEBIAN_VERSION}" = xtrixie ]; then
+    if [ x"${DEBIAN_VERSION}" = xjammy -o x"${DEBIAN_VERSION}" = xbookworm -o x"${DEBIAN_VERSION}" = xnoble -o x"${DEBIAN_VERSION}" = xtrixie -o x"${DEBIAN_VERSION}" = xresolute ]; then
         sed -i 's/libssl1.1/libssl3/' debian/control
     fi
     dch -b -m -D "$DEBIAN_VERSION" --force-distribution -v "1:${VERSION}-${DEB_RELEASE}.${DEBIAN_VERSION}" 'Update distribution'
